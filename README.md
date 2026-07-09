@@ -8,6 +8,11 @@ These scripts have been tested using the OPS-DSL library [1] and HDF5-1.14.6.
 
 The methods in this repository have been tested using the OpenSBLI CFD code [2], and the code for those simulations are in the 'OpenSBLI_cases' folder.
 
+SEM animations:
+![oSEM:](./figures/oSEM_gif.gif)
+
+![MRSEM:](./figures/MRSEM_gif.gif)
+
 
 \*\*\*Potential discrepancies in the manipulation of random numbers may exist: during the project, `ops_fill_random_uniform` produced both +ve and -ve numbers, whilst a test script on Iridis 6 produces only +ve numbers; modify this as necesary. 
 
