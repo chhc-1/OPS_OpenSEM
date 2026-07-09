@@ -54,9 +54,9 @@ void convect_eddies(ACC<double>& eddy_pos, ACC<double>& eddy_r, ACC<int>& eddy_e
         eddy_pos(0, 0, 0) = simulation_time + ((double)bulk_rng(0,0,0)) / (2147483648.0) * eddy_r(0, 0, 0);
         eddy_pos(1, 0, 0) = eddy_y_min[reg_num[0]] + (eddy_y_max[reg_num[0]] - eddy_y_min[reg_num[0]]) * ((double)bulk_rng(1,0,0)) / 2147483648.0;
         eddy_pos(2, 0, 0) = eddy_z_min + (eddy_z_max - eddy_z_min) * ((double)bulk_rng(2,0,0) ) / (2147483648.0);
-        eddy_eps(0, 0, 0) = (bulk_rng(3, 0, 0) < 0) ? -1 : 1;   
-        eddy_eps(1, 0, 0) = (bulk_rng(4, 0, 0) < 0) ? -1 : 1;   
-        eddy_eps(2, 0, 0) = (bulk_rng(5, 0, 0) < 0) ? -1 : 1;  
+        eddy_eps(0, 0, 0) = (bulk_rng(3, 0, 0) < 1073741824) ? -1 : 1;   
+        eddy_eps(1, 0, 0) = (bulk_rng(4, 0, 0) < 1073741824) ? -1 : 1;   
+        eddy_eps(2, 0, 0) = (bulk_rng(5, 0, 0) < 1073741824) ? -1 : 1;  
         printf("reset eddy in region %i to y=%f, z=%f with bulk rng value 1,2 = %i, %i \n", reg_num[0], eddy_pos(1,0,0), eddy_pos(2,0,0), bulk_rng(1,0,0), bulk_rng(2,0,0));
     }
 }
@@ -65,13 +65,13 @@ void instantiate_eddies(ACC<double>& eddy_pos, ACC<double>& eddy_r, ACC<int>& ed
     eddy_r(0, 0, 0) = radii[3*reg_num[0]]; 
     eddy_r(1, 0, 0) = radii[3*reg_num[0]+1];
     eddy_r(2, 0, 0) = radii[3*reg_num[0]+2];
-    eddy_pos(0, 0, 0) = simulation_time + (((double)bulk_rng(0, 0, 0) + 2147483648.0) / (4294967295.0) - 1.0) * eddy_r(0, 0, 0);
-    eddy_pos(1, 0, 0) = eddy_y_min[reg_num[0]] + ((double)bulk_rng(1, 0, 0) + 2147483648.0) / (4294967295.0) * (eddy_y_max[reg_num[0]] - eddy_y_min[reg_num[0]]);
+    eddy_pos(0, 0, 0) = simulation_time + (((double)bulk_rng(0, 0, 0)) / (2147483648.0) - 1.0) * eddy_r(0, 0, 0);
+    eddy_pos(1, 0, 0) = eddy_y_min[reg_num[0]] + ((double)bulk_rng(1, 0, 0)) / (2147483648.0) * (eddy_y_max[reg_num[0]] - eddy_y_min[reg_num[0]]);
     // same z max for all eddy regions
-    eddy_pos(2, 0, 0) = eddy_z_min + ((double)bulk_rng(2, 0, 0) + 2147483648.0) / (4294967295.0) * (eddy_z_max - eddy_z_min);
-    eddy_eps(0, 0, 0) = ((bulk_rng(3, 0, 0) < 0) ? -1 : 1);
-    eddy_eps(1, 0, 0) = ((bulk_rng(4, 0, 0) < 0) ? -1 : 1);
-    eddy_eps(2, 0, 0) = ((bulk_rng(5, 0, 0) < 0) ? -1 : 1);
+    eddy_pos(2, 0, 0) = eddy_z_min + ((double)bulk_rng(2, 0, 0)) / (2147483648.0) * (eddy_z_max - eddy_z_min);
+    eddy_eps(0, 0, 0) = ((bulk_rng(3, 0, 0) < 1073741824) ? -1 : 1);
+    eddy_eps(1, 0, 0) = ((bulk_rng(4, 0, 0) < 1073741824) ? -1 : 1);
+    eddy_eps(2, 0, 0) = ((bulk_rng(5, 0, 0) < 1073741824) ? -1 : 1);
 
 }
 

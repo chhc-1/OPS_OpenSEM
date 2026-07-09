@@ -1,19 +1,4 @@
-void print_arr_2D(ACC<double>& var){
-    printf("%f \n", var(0, 0));
-}
 
-void take_abs_vals(ACC<int>& vals){ 
-    //vals(0, 0) = std::abs(vals(0, 0));
-    if (vals(0, 0) < 0){
-        vals(0, 0) = -vals(0, 0);
-    }
-}
-
-void random_tester(ACC<int>& rng_seeds){
-    //printf("%i, ", rng_seeds(0, 0));
-    rng_seeds(0, 0) = ((a * rng_seeds(0, 0) + c) % m);
-    //printf("%i ||", rng_seeds(0, 0));
-}
 
 void instantiate_grid(ACC<double>& y, ACC<double>& z, const int* idx){
     // pass 1D y, z arrays in, then distribute
@@ -66,11 +51,11 @@ void convect_eddies(ACC<double>& x, ACC<double>& y, ACC<double>& z, ACC<double>&
     x(0, 0) += increment(0, 0);
     if(x(0, 0) > x_max){
         x(0, 0) = x_min;
-        y(0, 0) = eddy_y_min + (eddy_y_max - eddy_y_min) * (((double)y_rng(0, 0) + 2147483648.0) / (4294967295.0));
-        z(0, 0) = eddy_z_min + (eddy_z_max - eddy_z_min) * (((double)z_rng(0, 0) + 2147483648.0) / (4294967295.0));
-        eps_x(0, 0) = ((eps_x_rng(0, 0) < 0) ? -1 : 1);
-        eps_y(0, 0) = ((eps_y_rng(0, 0) < 0) ? -1 : 1);
-        eps_z(0, 0) = ((eps_z_rng(0, 0) < 0) ? -1 : 1);
+        y(0, 0) = eddy_y_min + (eddy_y_max - eddy_y_min) * (((double)y_rng(0, 0)) / (2147483648.0));
+        z(0, 0) = eddy_z_min + (eddy_z_max - eddy_z_min) * (((double)z_rng(0, 0)) / (2147483648.0));
+        eps_x(0, 0) = ((eps_x_rng(0, 0) < 1073741824) ? -1 : 1);
+        eps_y(0, 0) = ((eps_y_rng(0, 0) < 1073741824) ? -1 : 1);
+        eps_z(0, 0) = ((eps_z_rng(0, 0) < 1073741824) ? -1 : 1);
         radius(0, 0) = 0.2 * delta;
     }
 }
@@ -78,14 +63,14 @@ void convect_eddies(ACC<double>& x, ACC<double>& y, ACC<double>& z, ACC<double>&
 void instantiate_eddies(ACC<double>& x, ACC<double>& y, ACC<double>& z, ACC<double>& radius, ACC<double>& increment,
     ACC<int>& eps_x, ACC<int>& eps_y, ACC<int>& eps_z, const ACC<int>& x_rng, const ACC<int>& y_rng, const ACC<int>& z_rng, 
     const ACC<int>& eps_x_rng, const ACC<int>& eps_y_rng, const ACC<int>& eps_z_rng){
-    x(0, 0) = x_min + ((double)x_rng(0, 0) + 2147483648.0) / (4294967295.0) * (x_max - x_min);
-    y(0, 0) = eddy_y_min + ((double)y_rng(0, 0) + 2147483648.0) / (4294967295.0) * (eddy_y_max - eddy_y_min);
-    z(0, 0) = eddy_z_min + ((double)z_rng(0, 0) + 2147483648.0) / (4294967295.0) * (eddy_z_max - eddy_z_min);
+    x(0, 0) = x_min + ((double)x_rng(0, 0)) / (2147483648.0) * (x_max - x_min);
+    y(0, 0) = eddy_y_min + ((double)y_rng(0, 0)) / (2147483648.0) * (eddy_y_max - eddy_y_min);
+    z(0, 0) = eddy_z_min + ((double)z_rng(0, 0) ) / (2147483648.0) * (eddy_z_max - eddy_z_min);
     radius(0, 0) = 0.2*delta;
     increment(0, 0) = u0 * dt;
-    eps_x(0, 0) = ((eps_x_rng(0, 0) < 0) ? -1 : 1);
-    eps_y(0, 0) = ((eps_y_rng(0, 0) < 0) ? -1 : 1);
-    eps_z(0, 0) = ((eps_z_rng(0, 0) < 0) ? -1 : 1);
+    eps_x(0, 0) = ((eps_x_rng(0, 0) < 1073741824) ? -1 : 1);
+    eps_y(0, 0) = ((eps_y_rng(0, 0) < 1073741824) ? -1 : 1);
+    eps_z(0, 0) = ((eps_z_rng(0, 0) < 1073741824) ? -1 : 1);
 }
 
 void compute_fluct(const ACC<double>& y, const ACC<double>& z, const ACC<double>& a11, const ACC<double>& a21, const ACC<double>& a22, const ACC<double>& a31, const ACC<double>& a32, const ACC<double>& a33, 
@@ -103,13 +88,8 @@ void compute_fluct(const ACC<double>& y, const ACC<double>& z, const ACC<double>
     for (int i{0}; i < eddies; i++){
         rsq = x_gbl[i]*x_gbl[i] + (y_gbl[i]-y(0,0))*(y_gbl[i]-y(0,0)) + (z_gbl[i]-z(0,0))*(z_gbl[i]-z(0,0));
         if(rsq < r_gbl[i]*r_gbl[i]){
-        //if(y(0, 0) < y_gbl[i]+r_gbl[i] && y(0, 0) > y_gbl[i]-r_gbl[i] && z(0, 0) < z_gbl[i]+r_gbl[i] && z(0, 0) > z_gbl[i]-r_gbl[i]){
-            //shape = (std::abs(x_plane - x_gbl[i]) < r_gbl[i]) ? 1.0 - std::abs((x_plane - x_gbl[i]) / r_gbl[i]) : 0.0;
-            //shape *= pow(1.5, 0.5);
-            //shape *= 1.0 - std::abs((y(0, 0) - y_gbl[i]) / r_gbl[i]);
-            //shape *= 1.0 - std::abs((z(0, 0) - z_gbl[i]) / r_gbl[i]);
             shape = (std::abs(x_gbl[i] - x_plane) < r_gbl[i]) ? exp(-0.5*(x_gbl[i]-x_plane)*(x_gbl[i]-x_plane)/(r_gbl[i]*r_gbl[i])) : 0.0;
-            shape *= 1/1.5829045; //1/2.2385651; //1/5.01117;
+            shape *= 1/1.5829045; 
             shape *= exp(-0.5*(y_gbl[i]-y(0,0))*(y_gbl[i]-y(0,0))/(r_gbl[i]*r_gbl[i]));
             shape *= exp(-0.5*(z_gbl[i]-z(0,0))*(z_gbl[i]-z(0,0))/(r_gbl[i]*r_gbl[i]));
             
@@ -117,10 +97,6 @@ void compute_fluct(const ACC<double>& y, const ACC<double>& z, const ACC<double>
             uprime(0, 0) += a11(0, 0) * eps_x_gbl[i] * shape;
             vprime(0, 0) += a21(0, 0) * eps_x_gbl[i] * shape + a22(0, 0) * eps_y_gbl[i] * shape;
             wprime(0, 0) += a31(0, 0) * eps_x_gbl[i] * shape + a32(0, 0) * eps_y_gbl[i] * shape + a33(0, 0) * eps_z_gbl[i] * shape;
-
-            //uprime(0, 0) += eps_x_gbl[i] * shape;
-            //vprime(0, 0) += eps_y_gbl[i] * shape;
-            //wprime(0, 0) += eps_z_gbl[i] * shape;
         }
     }
 }

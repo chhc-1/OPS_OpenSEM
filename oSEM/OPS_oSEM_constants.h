@@ -19,7 +19,6 @@ double eddy_z_min;
 double eddy_z_max;
 double vol;
 double rep_radius;
-//constexpr int eddies = trunc(vol / (rep_radius*rep_radius*rep_radius));
 int eddies;
 int a;
 int c;
