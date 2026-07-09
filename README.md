@@ -9,7 +9,7 @@ These scripts have been tested using the OPS-DSL library [1] and HDF5-1.14.6.
 The methods in this repository have been tested using the OpenSBLI CFD code [2], and the code for those simulations are in the 'OpenSBLI_cases' folder.
 
 
-\*\*\*Pontential discrepancies in the manipulation of random numbers may exist: during the project, `ops_fill_random_uniform` produced both +ve and -ve numbers, whilst a test script on Iridis 6 produces only +ve numbers; modify this as necesary. 
+\*\*\*Potential discrepancies in the manipulation of random numbers may exist: during the project, `ops_fill_random_uniform` produced both +ve and -ve numbers, whilst a test script on Iridis 6 produces only +ve numbers; modify this as necesary. 
 
 ### References
 [1] I. Z. Reguly, G. R. Mudalige and M. B. Giles, Loop Tiling in Large-Scale Stencil Codes at Run-Time with OPS, in IEEE Transactions on Parallel and Distributed Systems, vol. 29, no. 4, pp. 873-886, 1 April 2018, doi: 10.1109/TPDS.2017.2778161.
