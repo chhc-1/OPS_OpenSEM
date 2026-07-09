@@ -1,24 +1,7 @@
-void print_arr_2D(ACC<double>& var){
-    printf("%f \n", var(0, 0));
-}
-
-void take_abs_vals(ACC<int>& vals){ 
-    //vals(0, 0) = std::abs(vals(0, 0));
-    if (vals(0, 0) < 0){
-        vals(0, 0) = -vals(0, 0);
-    }
-}
-
-void random_tester(ACC<int>& rng_seeds){
-    //printf("%i, ", rng_seeds(0, 0));
-    rng_seeds(0, 0) = ((a * rng_seeds(0, 0) + c) % m);
-    //printf("%i ||", rng_seeds(0, 0));
-}
-
 void instantiate_grid(ACC<double>& y, ACC<double>& z, const int* idx){
     // pass 1D y, z arrays in, then distribute
     y(0, 0) = y_min + (y_max + r_max - y_min) * (double)(idx[0]) / ny;
-    z(0, 0) = z_min - r_max + (z_max + r_max - z_min + r_max) * (double)(idx[1]) / nz;
+    z(0, 0) = z_min + (z_max - z_min) * (double)(idx[1]) / nz;
 }
 
 void instantiate_RST(ACC<double>& a11, ACC<double>& a21, ACC<double>& a22, ACC<double>& a31, ACC<double>& a32, ACC<double>& a33){
@@ -65,19 +48,20 @@ void convect_eddies(ACC<double>& eddy_pos, ACC<double>& eddy_r, ACC<int>& eddy_e
         eddy_r(0, 0, 0) = radii[3*reg_num[0]];
         eddy_r(1, 0, 0) = radii[3*reg_num[0]+1];
         eddy_r(2, 0, 0) = radii[3*reg_num[0]+2];
-        eddy_pos(0, 0, 0) = simulation_time + ((double)bulk_rng(0,0,0) + 2147483648.0) / (4294967295.0) * eddy_r(0, 0, 0);
-        eddy_pos(1, 0, 0) = eddy_y_min[reg_num[0]] + (eddy_y_max[reg_num[0]] - eddy_y_min[reg_num[0]]) * ((double)bulk_rng(1,0,0) + 2147483648.0) / (4294967295.0);
-        eddy_pos(2, 0, 0) = eddy_z_min + (eddy_z_max - eddy_z_min) * ((double)bulk_rng(2,0,0) + 2147483648.0) / (4294967295.0);
+        //eddy_pos(0, 0, 0) = simulation_time + ((double)bulk_rng(0,0,0) + 2147483648.0) / (4294967295.0) * eddy_r(0, 0, 0);
+        //eddy_pos(1, 0, 0) = eddy_y_min[reg_num[0]] + (eddy_y_max[reg_num[0]] - eddy_y_min[reg_num[0]]) * ((double)bulk_rng(1,0,0) + 2147483648.0) / (4294967295.0);
+        //eddy_pos(2, 0, 0) = eddy_z_min + (eddy_z_max - eddy_z_min) * ((double)bulk_rng(2,0,0) + 2147483648.0) / (4294967295.0);
+        eddy_pos(0, 0, 0) = simulation_time + ((double)bulk_rng(0,0,0)) / (2147483648.0) * eddy_r(0, 0, 0);
+        eddy_pos(1, 0, 0) = eddy_y_min[reg_num[0]] + (eddy_y_max[reg_num[0]] - eddy_y_min[reg_num[0]]) * ((double)bulk_rng(1,0,0)) / 2147483648.0;
+        eddy_pos(2, 0, 0) = eddy_z_min + (eddy_z_max - eddy_z_min) * ((double)bulk_rng(2,0,0) ) / (2147483648.0);
         eddy_eps(0, 0, 0) = (bulk_rng(3, 0, 0) < 0) ? -1 : 1;   
         eddy_eps(1, 0, 0) = (bulk_rng(4, 0, 0) < 0) ? -1 : 1;   
-        eddy_eps(2, 0, 0) = (bulk_rng(5, 0, 0) < 0) ? -1 : 1;   
-        //printf("reset an eddy from region %i \n", reg_num);
+        eddy_eps(2, 0, 0) = (bulk_rng(5, 0, 0) < 0) ? -1 : 1;  
+        printf("reset eddy in region %i to y=%f, z=%f with bulk rng value 1,2 = %i, %i \n", reg_num[0], eddy_pos(1,0,0), eddy_pos(2,0,0), bulk_rng(1,0,0), bulk_rng(2,0,0));
     }
 }
 
 void instantiate_eddies(ACC<double>& eddy_pos, ACC<double>& eddy_r, ACC<int>& eddy_eps, const ACC<int>& bulk_rng, const int* reg_num){
-    //printf("%i \n", reg_num);
-
     eddy_r(0, 0, 0) = radii[3*reg_num[0]]; 
     eddy_r(1, 0, 0) = radii[3*reg_num[0]+1];
     eddy_r(2, 0, 0) = radii[3*reg_num[0]+2];
@@ -85,12 +69,10 @@ void instantiate_eddies(ACC<double>& eddy_pos, ACC<double>& eddy_r, ACC<int>& ed
     eddy_pos(1, 0, 0) = eddy_y_min[reg_num[0]] + ((double)bulk_rng(1, 0, 0) + 2147483648.0) / (4294967295.0) * (eddy_y_max[reg_num[0]] - eddy_y_min[reg_num[0]]);
     // same z max for all eddy regions
     eddy_pos(2, 0, 0) = eddy_z_min + ((double)bulk_rng(2, 0, 0) + 2147483648.0) / (4294967295.0) * (eddy_z_max - eddy_z_min);
-    //eddy_increment(0, 0) = eddy_vel[reg_num] * dt;
     eddy_eps(0, 0, 0) = ((bulk_rng(3, 0, 0) < 0) ? -1 : 1);
     eddy_eps(1, 0, 0) = ((bulk_rng(4, 0, 0) < 0) ? -1 : 1);
     eddy_eps(2, 0, 0) = ((bulk_rng(5, 0, 0) < 0) ? -1 : 1);
 
-    //printf("eddy pos: (%f, %f, %f) | eddy radii: (%f, %f, %f) \n", eddy_pos(0,0,0), eddy_pos(1,0,0), eddy_pos(2,0,0), eddy_r(0,0,0), eddy_r(1,0,0), eddy_r(2,0,0));
 }
 
 void compute_fluct(const ACC<double>& y, const ACC<double>& z, const ACC<double>& a11, const ACC<double>& a21, const ACC<double>& a22, const ACC<double>& a31, const ACC<double>& a32, const ACC<double>& a33, 
@@ -101,8 +83,6 @@ void compute_fluct(const ACC<double>& y, const ACC<double>& z, const ACC<double>
     double normpos[3] = {0.0, 0.0, 0.0};
     double shape[3] = {0.0, 0.0, 0.0};
     double rsq;
-    //double shape_temp = 0.0;
-    //int idxA;
     uprime(0, 0) = 0;
     vprime(0, 0) = 0;
     wprime(0, 0) = 0;
@@ -117,17 +97,17 @@ void compute_fluct(const ACC<double>& y, const ACC<double>& z, const ACC<double>
           if(rsq < 1.0){
               
   
-              shape[0] = 1.0/1.7;//1.6;//1.55823;//3.2593;//2.4638;//1.55823;//1.8921; // scaling factor
+              shape[0] = 1.0/1.7; // scaling factor
               shape[0] *= exp(-0.5*normpos[0]*normpos[0]); // Gaussian
               shape[0] *= exp(-0.5*normpos[1]*normpos[1]); // Gaussian
-              shape[0] *= (std::abs(normpos[2]) < 0.001) ? normpos[2] : (1.0 - cos(2*3.14159265*normpos[2])) / (2*3.14158265*normpos[2] * sqrt(0.214)); // 1 - cosine function
-  
-              shape[1] = 1.0/1.7;//1.6;//1.55823;//3.2593;//2.4638;//1.55823;///1.8921; // scaling factor
+              shape[0] *= (std::abs(normpos[2]) < 0.001) ? normpos[2] : (1.0 - cos(2*3.14159265*normpos[2])) / (2*3.14158265*normpos[2] * sqrt(0.214)); // 1 - cosine function, change to Gaussian if desired
+
+              shape[1] = 1.0/1.7; // scaling factor
               shape[1] *= exp(-0.5*normpos[0]*normpos[0]); // minus Gaussian due to reversed Cholesky decomp in paper
               shape[1] *= exp(-0.5*normpos[1]*normpos[1]); // Gaussian
               shape[1] *= (std::abs(normpos[2]) < 0.001) ? normpos[2] : (1.0 - cos(2*3.14159265*normpos[2])) / (2*3.14158265*normpos[2] * sqrt(0.214)); // 1 - cosine function
   
-              shape[2] = 1.0/1.7;//1.6;//1.55823;//3.2593;//2.4638;//1.55823;///1.8921; // scaling factor
+              shape[2] = 1.0/1.7; // scaling factor
               shape[2] *= exp(-0.5*normpos[0]*normpos[0]); // Gaussian
               shape[2] *= (std::abs(normpos[1]) < 0.001) ? normpos[1] : (1.0 - cos(2*3.14159265*normpos[1])) / (2*3.14158265*normpos[1] * sqrt(0.214)); // 1 - cosine function
               shape[2] *= exp(-0.5*normpos[2]*normpos[2]); // Gaussian
@@ -136,9 +116,6 @@ void compute_fluct(const ACC<double>& y, const ACC<double>& z, const ACC<double>
               vprime(0, 0) += (a21(0, 0) * eddy_eps1[3*i] + a22(0, 0) * eddy_eps1[3*i+1]) * shape[1];
               wprime(0, 0) += (a31(0, 0) * eddy_eps1[3*i] + a32(0, 0) * eddy_eps1[3*i+1] + a33(0, 0) * eddy_eps1[3*i+2]) * shape[2];
   
-              //uprime(0, 0) += eddy_eps1[3*i] * shape[0];
-              //vprime(0, 0) += eddy_eps1[3*i+1] * shape[1];
-              //wprime(0, 0) += eddy_eps1[3*i+2] * shape[2];
           }
       }
     }
@@ -149,28 +126,22 @@ void compute_fluct(const ACC<double>& y, const ACC<double>& z, const ACC<double>
           normpos[1] = (y(0, 0) - eddy_pos2[3*i+1]) / (eddy_r2[3*i+1]);
           normpos[2] = (z(0, 0) - eddy_pos2[3*i+2]) / (eddy_r2[3*i+2]);
           rsq = normpos[0]*normpos[0] + normpos[1]*normpos[1] + normpos[2]*normpos[2];
-          //rsq = (simulation_time - eddy_pos2[3*i] - eddy_r2[3*i])*(simulation_time - eddy_pos2[3*i] - eddy_r2[3*i])/(eddy_r2[3*i]*eddy_r2[3*i]) 
-          //+ (y(0, 0) - eddy_pos2[3*i+1])*(y(0, 0) - eddy_pos2[3*i+1])/(eddy_r2[3*i+1]*eddy_r2[3*i+1]) + (z(0, 0) - eddy_pos2[3*i+2])*(z(0, 0) - eddy_pos2[3*i+2])/(eddy_r2[3*i+2]*eddy_r2[3*i+2]);
-          
-          //if(simulation_time > dt * 8){
-          //    printf("r2 normpos: (%f, %f, %f) \n", normpos[0], normpos[1], normpos[2]);
-          //}
   
           
           if(rsq < 1.0){
   
   
-              shape[0] = 1.0/1.7;//1.6;//1.55823;//4.0;//1.55823;//3.2593;//2.4638;//1.55823;///1.8921; // scaling factor
+              shape[0] = 1.0/1.7; // scaling factor
               shape[0] *= exp(-0.5*normpos[0]*normpos[0]);
               shape[0] *= exp(-0.5*normpos[1]*normpos[1]);
               shape[0] *= (std::abs(normpos[2]) < 0.001) ? normpos[2] : (1.0 - cos(2*3.14159265*normpos[2])) / (2*3.14158265*normpos[2] * sqrt(0.214));
   
-              shape[1] = 1.0/1.7;//1.6;//1.55823;//4.0;//1.55823;//3.2593;//2.4638;///1.55823;///1.8921; // scaling factor
+              shape[1] = 1.0/1.7; // scaling factor
               shape[1] *= exp(-0.5*normpos[0]*normpos[0]);
               shape[1] *= exp(-0.5*normpos[1]*normpos[1]);
               shape[1] *= (std::abs(normpos[2]) < 0.001) ? normpos[2] : (1.0 - cos(2*3.14159265*normpos[2])) / (2*3.14159265*normpos[2]*sqrt(0.214));
   
-              shape[2] = 1.0/1.7;//1.6;//1.55823;//4.0;//1.55823;//3.2593;//2.4638;//1.55823;///1.8921; // scaling factor
+              shape[2] = 1.0/1.7; // scaling factor
               shape[2] *= exp(-0.5*normpos[0]*normpos[0]);
               shape[2] *= (std::abs(normpos[1]) < 0.001) ? normpos[1] : (1.0 - cos(2*3.14159265*normpos[1])) / (2*3.14158265*normpos[1] * sqrt(0.214));
               shape[2] *= exp(-0.5*normpos[2]*normpos[2]);
@@ -178,9 +149,6 @@ void compute_fluct(const ACC<double>& y, const ACC<double>& z, const ACC<double>
               uprime(0, 0) += a11(0, 0) * eddy_eps2[3*i] * shape[0];
               vprime(0, 0) += (a21(0, 0) * eddy_eps2[3*i] + a22(0, 0) * eddy_eps2[3*i+1]) * shape[1];
               wprime(0, 0) += (a31(0, 0) * eddy_eps2[3*i] + a32(0, 0) * eddy_eps2[3*i+1] + a33(0, 0) * eddy_eps2[3*i+2]) * shape[2];
-              //uprime(0, 0) += eddy_eps2[3*i] * shape[0];
-              //vprime(0, 0) += eddy_eps2[3*i+1] * shape[1];
-              //wprime(0, 0) += eddy_eps2[3*i+2] * shape[2];
               
           }
       }
@@ -215,38 +183,9 @@ void compute_fluct(const ACC<double>& y, const ACC<double>& z, const ACC<double>
               uprime(0, 0) += a11(0, 0) * eddy_eps3[3*i] * shape[0];
               vprime(0, 0) += (a21(0, 0) * eddy_eps3[3*i] + a22(0, 0) * eddy_eps3[3*i+1]) * shape[1];
               wprime(0, 0) += (a31(0, 0) * eddy_eps3[3*i] + a32(0, 0) * eddy_eps3[3*i+1] + a33(0, 0) * eddy_eps3[3*i+2]) * shape[2];
-  
-              //uprime(0, 0) += eddy_eps3[3*i] * shape[0];
-              //vprime(0, 0) += eddy_eps3[3*i+1] * shape[1];
-              //wprime(0, 0) += eddy_eps3[3*i+2] * shape[2];
+
           }
       }
     }
-
-
-    /*
-    for (int i{0}; i < eddies; i++){
-        rsq = x_gbl[i]*x_gbl[i] + (y_gbl[i]-y(0,0))*(y_gbl[i]-y(0,0)) + (z_gbl[i]-z(0,0))*(z_gbl[i]-z(0,0));
-        if(rsq < r_gbl[i]*r_gbl[i]){
-        //if(y(0, 0) < y_gbl[i]+r_gbl[i] && y(0, 0) > y_gbl[i]-r_gbl[i] && z(0, 0) < z_gbl[i]+r_gbl[i] && z(0, 0) > z_gbl[i]-r_gbl[i]){
-            //shape = (std::abs(x_plane - x_gbl[i]) < r_gbl[i]) ? 1.0 - std::abs((x_plane - x_gbl[i]) / r_gbl[i]) : 0.0;
-            //shape *= pow(1.5, 0.5);
-            //shape *= 1.0 - std::abs((y(0, 0) - y_gbl[i]) / r_gbl[i]);
-            //shape *= 1.0 - std::abs((z(0, 0) - z_gbl[i]) / r_gbl[i]);
-            shape = (std::abs(x_gbl[i] - x_plane) < r_gbl[i]) ? exp(-0.5*(x_gbl[i]-x_plane)*(x_gbl[i]-x_plane)/(r_gbl[i]*r_gbl[i])) : 0.0;
-            shape *= 1/1.5829045; //1/2.2385651; //1/5.01117;
-            shape *= exp(-0.5*(y_gbl[i]-y(0,0))*(y_gbl[i]-y(0,0))/(r_gbl[i]*r_gbl[i]));
-            shape *= exp(-0.5*(z_gbl[i]-z(0,0))*(z_gbl[i]-z(0,0))/(r_gbl[i]*r_gbl[i]));
-            
-
-            uprime(0, 0) += a11(0, 0) * eps_x_gbl[i] * shape;
-            vprime(0, 0) += a21(0, 0) * eps_x_gbl[i] * shape + a22(0, 0) * eps_y_gbl[i] * shape;
-            wprime(0, 0) += a31(0, 0) * eps_x_gbl[i] * shape + a32(0, 0) * eps_y_gbl[i] * shape + a33(0, 0) * eps_z_gbl[i] * shape;
-
-            //uprime(0, 0) += eps_x_gbl[i] * shape;
-            //vprime(0, 0) += eps_y_gbl[i] * shape;
-            //wprime(0, 0) += eps_z_gbl[i] * shape;
-        }
-    }*/
 }
 

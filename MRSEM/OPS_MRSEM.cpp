@@ -5,13 +5,7 @@
 #include <stdio.h>
 #include <fstream>
 #include <string>
-#include <cuda_runtime.h>
 
-std::mt19937 urng;
-std::uniform_real_distribution<double> y_rand;
-std::uniform_real_distribution<double> z_rand;
-std::uniform_int_distribution<int> eps_rand;
-std::map<int, int> eps_map;
 
 #define OPS_2D
 #include "ops_seq.h"
@@ -46,17 +40,12 @@ int main(int argc, char** argv){
     y_min = 0.0;
     y_max = 0.007; //1.5 * delta + r_max;
 
-    z_min = 0.0; // - r_max;
-    z_max = 0.05; // + r_max;
+    z_min = 0.0;
+    z_max = 0.05;
     eddy_z_min = z_min - r_max;
     eddy_z_max = z_max + r_max;
 
-    ops_printf("check0\n");
-
-    //x_radii = (double*)malloc(nregions * sizeof(double));
     eddies = (int*)malloc(nregions * sizeof(int));
-
-    printf("check1\n");
 
     eddy_vel = (double*)malloc(sizeof(double) * nregions);
     eddy_vel[0] = 0.62 * u0; //0.2 * u0;
@@ -68,22 +57,16 @@ int main(int argc, char** argv){
 
     
 
-    //x_radii[0] = 0.00439109;
-    //x_radii[1] = 0.00526931;
-    //x_radii[2] = 0.0014;
 
     // each 3 set is t, y, z of the ith region
     // initially assign x lengths for eddy calculation, then switch to time after number of eddies has been calculated
-
-    //double lx = 0.00439109;
-    // current l+ values: 100, 15, 40 in (x, y, z) respectively
     double lplus = 3.4178e-5;
     
-    radii[0] = 100.0 * lplus;//0.0034178;//0.0068356;//0.0034178;//0.00439109; //lx / eddy_vel[0];
-    radii[1] = 20.0 * lplus;//0.00041014;//0.00034178;//0.00068356;//0.00087822;
-    radii[2] = 60.0 * lplus;//0.00085445;//0.00068356;//0.00205068;//0.00263466;
+    radii[0] = 100.0 * lplus;
+    radii[1] = 20.0 * lplus;
+    radii[2] = 60.0 * lplus;
     
-    //lx = 0.00526931;
+    
     //current l+ values: 80, 35, 35 in (x, y, z) respectively
     radii[3] = 120.0 * lplus;//0.00205068;//0.00273424;//0.00526931 * 2.0/3.0; //lx / eddy_vel[1];
     radii[4] = 60.0 * lplus;//0.00068356;//0.00136712;//0.00263466 * 2.0/3.0;
@@ -106,21 +89,9 @@ int main(int argc, char** argv){
     vols = (double*)malloc(nregions * sizeof(double));
     for (int i{0}; i < nregions; i++){
         vols[i] = std::abs(2 * radii[3*i] * (eddy_y_max[i] - eddy_y_min[i]) * (eddy_z_max - eddy_z_min));
-        //vols[i] = std::abs((eddy_y_max[i] - eddy_y_min[i]) * (eddy_z_max - eddy_z_min));
     }
 
-    ops_printf("check2\n");
-    
-    
     calc_eddies(eddies, vols, radii, nregions);
-    //eddies[0] = 116;
-    //eddies[1] = 112;
-    //eddies[2] = 472;
-    /*
-    for(int i{0}; i < nregions; i++){
-        //eddies[i] = trunc(vols[i]/ (radii[3*i]*radii[3*i+1]*radii[3*i+2]));
-        eddies[i] = trunc(vols[i]/ (radii[3*i+1]*radii[3*i+2]));
-    }*/
 
 
     radii[0] = radii[0] / eddy_vel[0];
@@ -130,11 +101,11 @@ int main(int argc, char** argv){
     for(int i{0}; i < nregions; i++){
         ops_printf("Region %i -> eddies: %i, vol=%f \n", i, eddies[i], vols[i]);
     }
-    // LCG values (change the seed init using LCG)
+    // LCG values (change the seed init using LCG), could just set the seed as a random number.
     a = 5;
     c = 3;
     m = pow(2, 29);
-    seed_gbl = 2893328493; // reminder that this is declared or updated as an OPS constant
+    seed_gbl = 2893328493;
     
     // ------------------------------------ Allocate memory for eddy variables -----------------------------
 
@@ -156,10 +127,6 @@ int main(int argc, char** argv){
     r22interp = (double*)(vv_inp);
     r33interp = (double*)(ww_inp);
 
-    //y_rand = std::uniform_real_distribution<double>(y_min - r_max, y_max + r_max); // may have issues
-    //z_rand = std::uniform_real_distribution<double>(z_min - r_max, z_max + r_max); // may have issues
-    //eps_rand = std::uniform_int_distribution<int>(0, 1);
-    //eps_map = std::map<int, int>{{0, -1}, {1, 1}};
 
     // --------------------------- convert variables to ops const ---------------------------------------------------
     ops_decl_const("u0", 1, "double", &u0);
@@ -184,7 +151,6 @@ int main(int argc, char** argv){
     ops_decl_const("eddies", nregions, "int", &eddies[0]);
     ops_decl_const("radii", 3*nregions, "double", &radii[0]);
     ops_decl_const("eddy_vel", nregions, "double", &eddy_vel[0]);
-    //ops_decl_const("reg_num", 1, "int", &reg_num);
 
     
     int eddy_size1[] = {eddies[0], 1};
@@ -214,7 +180,7 @@ int main(int argc, char** argv){
     double* a33 = NULL;
 
     // Random number arrays
-    // consider uinsg 1 ops_dat to store all 6 sets of  random numbers: 1x x position, 1x y position, 1x z position, 3x random direction (x, y, z) for each eddy
+    // using 1 ops_dat to store all 6 sets of  random numbers: 1x x position, 1x y position, 1x z position, 3x random direction (x, y, z) for each eddy
     int* bulk_rng1 = NULL; // contains 6 random ints per 'grid point'
     int* bulk_rng2 = NULL;
     int* bulk_rng3 = NULL;
@@ -225,17 +191,17 @@ int main(int argc, char** argv){
 
     // OPS version of eddy variables
     
-    double* EDDY_POS1 = NULL;//(double*)malloc(sizeof(double) * 3 * eddies[0]);//NULL;
-    double* EDDY_R1 = NULL;//(double*)malloc(sizeof(double) * 3 * eddies[0]);//NULL;
-    int* EDDY_EPS1 = NULL;//(double*)malloc(sizeof(double) * 3 * eddies[0]);//NULL;
+    double* EDDY_POS1 = NULL;
+    double* EDDY_R1 = NULL;
+    int* EDDY_EPS1 = NULL;
 
-    double* EDDY_POS2 = NULL;//(double*)malloc(sizeof(double) * 3 * eddies[1]);//NULL;
-    double* EDDY_R2 = NULL;//(double*)malloc(sizeof(double) * 3 * eddies[1]);//NULL;
-    int* EDDY_EPS2 = NULL;//(double*)malloc(sizeof(double) * 3 * eddies[1]);//NULL;
+    double* EDDY_POS2 = NULL;
+    double* EDDY_R2 = NULL;
+    int* EDDY_EPS2 = NULL;
 
-    double* EDDY_POS3 = NULL;//(double*)malloc(sizeof(double) * 3 * eddies[2]);//NULL;
-    double* EDDY_R3 = NULL;//(double*)malloc(sizeof(double) * 3 * eddies[2]);//NULL;
-    int* EDDY_EPS3 = NULL;//(double*)malloc(sizeof(int) * 3 * eddies[2]);//NULL;
+    double* EDDY_POS3 = NULL;
+    double* EDDY_R3 = NULL;
+    int* EDDY_EPS3 = NULL;
 
 
 
@@ -285,16 +251,11 @@ int main(int argc, char** argv){
     seed_gbl = (a * seed_gbl + c) % m;
     ops_randomgen_init(seed_gbl, 0);
     ops_fill_random_uniform(d_bulk_rng1);
-    //seed_gbl = (a * seed_gbl + c) % m;
-    //ops_randomgen_init(seed_gbl, 0);
     ops_fill_random_uniform(d_bulk_rng2);
-    //seed_gbl = (a * seed_gbl + c) % m;
-    //ops_randomgen_init(seed_gbl, 0);
     ops_fill_random_uniform(d_bulk_rng3);
 
     // instantiate eddy values
     reg_num = 0;
-    //ops_update_const("reg_num", 1, "int", &reg_num);
     
     ops_printf("instantiating eddies\n");
     ops_printf("=====================================\n");
@@ -328,19 +289,6 @@ int main(int argc, char** argv){
     ops_dat_fetch_data(d_eddy_r1, 0, (char*)eddy_r1);
     ops_dat_fetch_data(d_eddy_r2, 0, (char*)eddy_r2);
     ops_dat_fetch_data(d_eddy_r3, 0, (char*)eddy_r3);
-/*
-    ops_decl_const("eddy_pos1", 3*eddies[0], "double", &eddy_pos1[0]);
-    ops_decl_const("eddy_r1", 3*eddies[0], "double", &eddy_r1[0]);
-    ops_decl_const("eddy_eps1", 3*eddies[0], "int", &eddy_eps1[0]);
-
-    ops_decl_const("eddy_pos2", 3*eddies[1], "double", &eddy_pos2[0]);
-    ops_decl_const("eddy_r2", 3*eddies[1], "double", &eddy_r2[0]);
-    ops_decl_const("eddy_eps2", 3*eddies[1], "int", &eddy_eps2[0]);
-
-    ops_decl_const("eddy_pos3", 3*eddies[2], "double", &eddy_pos3[0]);
-    ops_decl_const("eddy_r3", 3*eddies[2], "double", &eddy_r3[0]);
-    ops_decl_const("eddy_eps3", 3*eddies[2], "int", &eddy_eps3[0]);
-*/
     
 
     ops_par_loop(instantiate_grid, "instantiate_grid", inlet_block, 2, iter_range,
@@ -398,20 +346,12 @@ int main(int argc, char** argv){
         simulation_time = simulation_time + dt;
         ops_update_const("simulation_time", 1, "double", &simulation_time);
 
-        //seed_gbl = (a * seed_gbl + c) % m;
-        //ops_randomgen_init(seed_gbl, 0);
+
         ops_fill_random_uniform(d_bulk_rng1);
-
-        //seed_gbl = (a * seed_gbl + c) % m;
-        //ops_randomgen_init(seed_gbl, 0);
         ops_fill_random_uniform(d_bulk_rng2);
-
-        //seed_gbl = (a * seed_gbl + c) % m;
-        //ops_randomgen_init(seed_gbl, 0);
         ops_fill_random_uniform(d_bulk_rng3);
 
         reg_num = 0;
-        //ops_update_const("reg_num", 1, "int", &reg_num);
         ops_par_loop(convect_eddies, "convect_eddies", eddy_block, 2, eddy_iter_range1,
         ops_arg_dat(d_eddy_pos1, 3, S2D_00, "double", OPS_RW),
         ops_arg_dat(d_eddy_r1, 3, S2D_00, "double", OPS_RW),
@@ -419,10 +359,9 @@ int main(int argc, char** argv){
         ops_arg_dat(d_bulk_rng1, 6, S2D_00, "int", OPS_READ),
         ops_arg_gbl(&reg_num, 1, "int", OPS_READ));
         
-        //cudaDeviceSynchronize();
+        
 
         reg_num = 1;
-        //ops_update_const("reg_num", 1, "int", &reg_num);
         ops_par_loop(convect_eddies, "convect_eddies", eddy_block, 2, eddy_iter_range2,
         ops_arg_dat(d_eddy_pos2, 3, S2D_00, "double", OPS_RW),
         ops_arg_dat(d_eddy_r2, 3, S2D_00, "double", OPS_RW),
@@ -430,10 +369,9 @@ int main(int argc, char** argv){
         ops_arg_dat(d_bulk_rng2, 6, S2D_00, "int", OPS_READ),
         ops_arg_gbl(&reg_num, 1, "int", OPS_READ));
         
-        //cudaDeviceSynchronize();
+        
 
         reg_num = 2;
-        //reg_num = 2;ops_update_const("reg_num", 1, "int", &reg_num);
         ops_par_loop(convect_eddies, "convect_eddies", eddy_block, 2, eddy_iter_range3,
         ops_arg_dat(d_eddy_pos3, 3, S2D_00, "double", OPS_RW),
         ops_arg_dat(d_eddy_r3, 3, S2D_00, "double", OPS_RW),
@@ -441,35 +379,16 @@ int main(int argc, char** argv){
         ops_arg_dat(d_bulk_rng3, 6, S2D_00, "int", OPS_READ),
         ops_arg_gbl(&reg_num, 1, "int", OPS_READ));
         
-        //cudaDeviceSynchronize();
-
-
-        ops_dat_fetch_data(d_eddy_pos1, 0, (char*)eddy_pos1); // currnetly causing core dump/seg fault...
-        //ops_dat_fetch_data(d_eddy_r1, 0, (char*)eddy_r1);
+        ops_dat_fetch_data(d_eddy_pos1, 0, (char*)eddy_pos1);
         ops_dat_fetch_data(d_eddy_eps1, 0, (char*)eddy_eps1);
 
         ops_dat_fetch_data(d_eddy_pos2, 0, (char*)eddy_pos2);
-        //ops_dat_fetch_data(d_eddy_r3, 0, (char*)eddy_r2);
         ops_dat_fetch_data(d_eddy_eps2, 0, (char*)eddy_eps2);
 
         ops_dat_fetch_data(d_eddy_pos3, 0, (char*)eddy_pos3);
-        //ops_dat_fetch_data(d_eddy_r2, 0, (char*)eddy_r3);
         ops_dat_fetch_data(d_eddy_eps3, 0, (char*)eddy_eps3);
-/*
-        ops_update_const("eddy_pos1", 3*eddies[0], "double", eddy_pos1);
-        //ops_update_const("eddy_r1", 3*eddies[0], "double", eddy_r1);
-        ops_update_const("eddy_eps1", 3*eddies[0], "int", eddy_eps1);
-
-        ops_update_const("eddy_pos2", 3*eddies[1], "double", eddy_pos2);
-        //ops_update_const("eddy_r2", 3*eddies[1], "double", eddy_r2);
-        ops_update_const("eddy_eps2", 3*eddies[1], "int", eddy_eps2);
-
-        ops_update_const("eddy_pos3", 3*eddies[2], "double", eddy_pos3);
-        //ops_update_const("eddy_r3", 3*eddies[2], "double", eddy_r3);
-        ops_update_const("eddy_eps3", 3*eddies[2], "int", eddy_eps3);*/
 
         
-    // ----------------------------CURRENT PROGRESS----------------------------------------------
 
         ops_par_loop(compute_fluct, "compute_fluct", inlet_block, 2, iter_range,
         ops_arg_dat(d_y_inlet, 1, S2D_00, "double", OPS_READ),
@@ -494,13 +413,10 @@ int main(int argc, char** argv){
         ops_arg_gbl(eddy_eps3, 3*eddies[2], "int", OPS_READ),
         ops_arg_idx());
 
-        /*
-        filename = std::string("u_test" + std::to_string(i) + ".dat");
+        filename = std::string("up-") + std::to_string(i) + ".txt";
+
         ops_print_dat_to_txtfile(d_uprime, filename.c_str());
-        filename = std::string("v_test" + std::to_string(i) + ".dat");
-        ops_print_dat_to_txtfile(d_vprime, filename.c_str());
-        filename = std::string("w_test" + std::to_string(i) + ".dat");
-        ops_print_dat_to_txtfile(d_wprime, filename.c_str());*/
+
     }
 
     ops_timers(&ct1, &et1);
