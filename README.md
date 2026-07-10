@@ -2,7 +2,7 @@
 
 OPS version of methods implemented in https://github.com/chhc-1/OpenSEM .
 
-oSEM, MRSEM, ISEM have been implemented. Note the version of ISEM in https://github.com/chhc-1/OpenSEM is currently bugged - it should not produce the correct Reynold's Stress Tensor. Currently, periodic BCs are implemented only in the OpenSBLI scripts in this repository.
+oSEM, MRSEM, ISEM have been implemented. Note the version of ISEM in https://github.com/chhc-1/OpenSEM is currently bugged - it should not produce the correct Reynold's Stress Tensor. Currently, periodic BCs are implemented only in the OpenSBLI scripts in this repository. MRSEM_mod implements periodic BCs and temperature fluctuations using Strong Reynold's Analogy.
 
 These scripts have been tested using the OPS-DSL library [1] and HDF5-1.14.6.
 
