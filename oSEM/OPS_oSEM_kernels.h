@@ -6,14 +6,6 @@ void instantiate_grid(ACC<double>& y, ACC<double>& z, const int* idx){
     z(0, 0) = z_min - r_max + (z_max + r_max - z_min + r_max) * (double)(idx[1]) / nz;
 }
 
-void instantiate_RST(ACC<double>& a11, ACC<double>& a21, ACC<double>& a22, ACC<double>& a31, ACC<double>& a32, ACC<double>& a33){
-    a11(0, 0) = u0 * TI;
-    a21(0, 0) = 0;
-    a22(0, 0) = u0 * TI;
-    a31(0, 0) = 0;
-    a32(0, 0) = 0;
-    a33(0, 0) = u0 * TI;
-}
 
 void instantiate_RST_TBL(ACC<double>& a11, ACC<double>& a21, ACC<double>& a22, ACC<double>& a31, ACC<double>& a32, ACC<double>& a33,
                     const ACC<double>& y, const ACC<double>& z, const double* ydata, const double* r11data, const double* r21data, const double* r22data,
@@ -79,8 +71,6 @@ void compute_fluct(const ACC<double>& y, const ACC<double>& z, const ACC<double>
     
     double shape = 0.0;
     double rsq;
-    //double shape_temp = 0.0;
-    //int idxA;
     uprime(0, 0) = 0;
     vprime(0, 0) = 0;
     wprime(0, 0) = 0;

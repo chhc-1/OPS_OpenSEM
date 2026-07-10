@@ -27,16 +27,15 @@ int main(int argc, char** argv){
     ny = 100;
     nz = 150;
     niter = 2000;
-    TI = 0.01;
     x_min = -r_max;
     x_max = r_max;
     x_plane = 0.0;
     y_min = 0.0;
-    y_max = 0.009; //1.5 * delta + r_max;
+    y_max = 0.009;
     eddy_y_min = y_min;
     eddy_y_max = y_max + r_max;
-    z_min = 0.0; // - r_max;
-    z_max = 0.05; // + r_max;
+    z_min = 0.0;
+    z_max = 0.05;
     eddy_z_min = z_min - r_max;
     eddy_z_max = z_max + r_max;
     vol = std::abs((x_max - x_min) * (y_max - y_min + 2 * r_max) * (z_max - z_min + 2 * r_max));
@@ -83,7 +82,6 @@ int main(int argc, char** argv){
     ops_decl_const("eddy_z_min", 1, "double", &eddy_z_min);
     ops_decl_const("eddy_z_max", 1, "double", &eddy_z_max);
     ops_decl_const("x_plane", 1, "double", &x_plane);
-    ops_decl_const("TI", 1, "double", &TI);
     ops_decl_const("ny", 1, "int", &ny);
     ops_decl_const("nz", 1, "int", &nz);
     ops_decl_const("delta", 1, "double", &delta);
@@ -225,10 +223,6 @@ int main(int argc, char** argv){
 
     ops_timers(&ct0, &et0);
 
-    filename = "y_inlet.txt";
-    //ops_print_dat_to_txtfile(d_y_inlet, filename.c_str());
-    filename = "z_inlet.txt";
-    //ops_print_dat_to_txtfile(d_z_inlet, filename.c_str());
     printf("%s \n", "------------------------------");
 
     printf("======================================\n");
@@ -285,13 +279,6 @@ int main(int argc, char** argv){
         ops_arg_gbl(eps_y_gbl, eddies, "int", OPS_READ),
         ops_arg_gbl(eps_z_gbl, eddies, "int", OPS_READ),);
 
-        /*
-        filename = std::string("u_test" + std::to_string(i) + ".dat");
-        ops_print_dat_to_txtfile(d_uprime, filename.c_str());
-        filename = std::string("v_test" + std::to_string(i) + ".dat");
-        ops_print_dat_to_txtfile(d_vprime, filename.c_str());
-        filename = std::string("w_test" + std::to_string(i) + ".dat");
-        ops_print_dat_to_txtfile(d_wprime, filename.c_str());*/
         filename = std::string("up-") + std::to_string(i) + ".txt";
         ops_print_dat_to_txtfile(d_uprime, filename.c_str());
 
