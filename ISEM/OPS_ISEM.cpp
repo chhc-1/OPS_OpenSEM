@@ -27,7 +27,6 @@ int main(int argc, char** argv){
     ny = 100;
     nz = 150;
     niter = 2000;
-    TI = 0.01;
     x_min = -r_max;
     x_max = r_max;
     x_plane = 0.0;
@@ -101,7 +100,6 @@ int main(int argc, char** argv){
     ops_decl_const("eddy_z_min", 1, "double", &eddy_z_min);
     ops_decl_const("eddy_z_max", 1, "double", &eddy_z_max);
     ops_decl_const("x_plane", 1, "double", &x_plane);
-    ops_decl_const("TI", 1, "double", &TI);
     ops_decl_const("ny", 1, "int", &ny);
     ops_decl_const("nz", 1, "int", &nz);
     ops_decl_const("delta", 1, "double", &delta);

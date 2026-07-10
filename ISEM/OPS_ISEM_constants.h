@@ -5,7 +5,6 @@ double r_max;
 int ny;
 int nz;
 int niter;
-double TI;
 double x_min;
 double x_max;
 double x_plane;
