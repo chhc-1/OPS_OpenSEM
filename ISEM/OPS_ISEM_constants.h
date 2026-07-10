@@ -24,7 +24,6 @@ double gama;
 double Minf;
 double Twall;
 double Tinf;
-//constexpr int eddies = trunc(vol / (rep_radius*rep_radius*rep_radius));
 int eddies;
 int a;
 int c;

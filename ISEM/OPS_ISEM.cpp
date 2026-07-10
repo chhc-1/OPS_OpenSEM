@@ -6,12 +6,6 @@
 #include <fstream>
 #include <string>
 
-std::mt19937 urng;
-std::uniform_real_distribution<double> y_rand;
-std::uniform_real_distribution<double> z_rand;
-std::uniform_int_distribution<int> eps_rand;
-std::map<int, int> eps_map;
-
 #define OPS_2D
 #include "ops_seq.h"
 #include "ops_lib_core.h"
@@ -38,9 +32,9 @@ int main(int argc, char** argv){
     x_max = r_max;
     x_plane = 0.0;
     y_min = 0.0;
-    y_max = 0.007; //1.5 * delta + r_max;
+    y_max = 0.007;
     eddy_y_min = y_min;
-    eddy_y_max = delta+r_max;// + 0.05 * delta;
+    eddy_y_max = delta+r_max;
     z_min = 0.0; // - r_max;
     z_max = 0.05; // + r_max;
     eddy_z_min = z_min - r_max;
@@ -50,22 +44,21 @@ int main(int argc, char** argv){
     calc_eddies(eddies, vol, rep_radius);
     double dymin = (y_max-y_min)/((double)ny);
     double dzmin = (z_max-z_min)/((double)nz);
-    dmin = 0.0002;//(dymin < dzmin) ? dymin : dzmin;
+    dmin = 0.0002;
     gama = 1.4;
     Minf = 2.0;
     Twall = 272.2;
     Tinf = 202.2;
 
-    powfact = 0.5; //1.2; //0.5 // controls distribution shape for non uniform distributed section
-    cutoff = 0.987;//0.5; // controls number of numbers under uniform distribution
-    edgeval = pow(0.5, powfact);
+    powfact = 0.5; // controls distribution shape for non uniform distributed section
+    cutoff = 0.987; // controls number of numbers under uniform distribution
     vsf = 5.0 * sqrt(2.0/3.0);
     rng_minval = 0.05;
     rng_sf = pow(rng_minval, 1.0/powfact);
     k = (1.0+rng_sf) / (1.0-rng_sf);
     b = k+1.0;
 
-    printf("rng_sf : %f, k: %f, %b: %f \n", rng_sf, k, b);
+    printf("rng_sf : %f, k: %f, b: %f \n", rng_sf, k, b);
 
 
     printf("eddies: %i", eddies);
@@ -91,11 +84,6 @@ int main(int argc, char** argv){
     r21interp = (double*)(uv_inp);
     r22interp = (double*)(vv_inp);
     r33interp = (double*)(ww_inp);
-
-    //y_rand = std::uniform_real_distribution<double>(y_min - r_max, y_max + r_max); // may have issues
-    //z_rand = std::uniform_real_distribution<double>(z_min - r_max, z_max + r_max); // may have issues
-    //eps_rand = std::uniform_int_distribution<int>(0, 1);
-    //eps_map = std::map<int, int>{{0, -1}, {1, 1}};
 
 
     // --------------------------- convert variables to ops const ---------------------------------------------------
@@ -126,7 +114,6 @@ int main(int argc, char** argv){
 
     ops_decl_const("powfact", 1, "double", &powfact);
     ops_decl_const("cutoff", 1, "double", &cutoff);
-    ops_decl_const("edgeval", 1, "double", &edgeval);
     ops_decl_const("vsf", 1, "double", &vsf);
     ops_decl_const("rng_minval", 1, "double", &rng_minval);
     ops_decl_const("rng_sf", 1, "double", &rng_sf);
@@ -222,20 +209,10 @@ int main(int argc, char** argv){
     seed_gbl = (a * seed_gbl + c) % m;
     ops_randomgen_init(seed_gbl, 0);
     ops_fill_random_uniform(d_x_rng);
-    seed_gbl = (a * seed_gbl + c) % m;
-    ops_randomgen_init(seed_gbl, 0);
     ops_fill_random_uniform(d_y_rng);
-    seed_gbl = (a * seed_gbl + c) % m;
-    ops_randomgen_init(seed_gbl, 0);
     ops_fill_random_uniform(d_z_rng);
-    seed_gbl = (a * seed_gbl + c) % m;
-    ops_randomgen_init(seed_gbl, 0);
     ops_fill_random_uniform(d_eps_x_rng);
-    seed_gbl = (a * seed_gbl + c) % m;
-    ops_randomgen_init(seed_gbl, 0);
     ops_fill_random_uniform(d_eps_y_rng);
-    seed_gbl = (a * seed_gbl + c) % m;
-    ops_randomgen_init(seed_gbl, 0);
     ops_fill_random_uniform(d_eps_z_rng);
 
     // instantiate eddy values
@@ -255,14 +232,6 @@ int main(int argc, char** argv){
     ops_arg_dat(d_eps_y_rng, 1, S2D_00, "int", OPS_READ),
     ops_arg_dat(d_eps_z_rng, 1, S2D_00, "int", OPS_READ));
 
-/*
-    ops_decl_const("x_gbl", eddies, "double", &x_gbl[0]);
-    ops_decl_const("y_gbl", eddies, "double", &y_gbl[0]);
-    ops_decl_const("z_gbl", eddies, "double", &z_gbl[0]);
-    ops_decl_const("r_gbl", eddies, "double", &r_gbl[0]);
-    ops_decl_const("eps_x_gbl", eddies, "int", &eps_x_gbl[0]);
-    ops_decl_const("eps_y_gbl", eddies, "int", &eps_y_gbl[0]);
-    ops_decl_const("eps_z_gbl", eddies, "int", &eps_z_gbl[0]);*/
 
     ops_par_loop(instantiate_grid, "instantiate_grid", inlet_block, 2, iter_range,
     ops_arg_dat(d_y_inlet, 1, S2D_00, "double", OPS_WRITE),
@@ -285,29 +254,12 @@ int main(int argc, char** argv){
     ops_arg_gbl(r33interp, 260, "double", OPS_READ));
 
     std::string filename;
-    /*
-    filename = "a11.dat";
-    ops_print_dat_to_txtfile(d_a11, filename.c_str());
-    filename = "a21.dat";
-    ops_print_dat_to_txtfile(d_a21, filename.c_str());
-    filename = "a22.dat";
-    ops_print_dat_to_txtfile(d_a22, filename.c_str());
-    filename = "a31.dat";
-    ops_print_dat_to_txtfile(d_a31, filename.c_str());
-    filename = "a32.dat";
-    ops_print_dat_to_txtfile(d_a32, filename.c_str());
-    filename = "a33.dat";
-    ops_print_dat_to_txtfile(d_a33, filename.c_str());
-*/
+
     double ct0, et0;
     double ct1, et1;
 
     ops_timers(&ct0, &et0);
 
-    filename = "y_inlet.txt";
-    //ops_print_dat_to_txtfile(d_y_inlet, filename.c_str());
-    filename = "z_inlet.txt";
-    //ops_print_dat_to_txtfile(d_z_inlet, filename.c_str());
     printf("%s \n", "------------------------------");
 
     ops_par_loop(instantiate_Tbar, "instantiate_Tbar", inlet_block, 2, iter_range,
@@ -318,24 +270,11 @@ int main(int argc, char** argv){
 
     for(int i{0}; i < niter; i++){
 
-        //seed_gbl = (a * seed_gbl + c) % m;
-        //ops_randomgen_init(seed_gbl, 0);
+
         ops_fill_random_uniform(d_y_rng);
-
-        //seed_gbl = (a * seed_gbl + c) % m;
-        //ops_randomgen_init(seed_gbl, 0);
         ops_fill_random_uniform(d_z_rng);
-
-        //seed_gbl = (a * seed_gbl + c) % m;
-        //ops_randomgen_init(seed_gbl, 0);
         ops_fill_random_uniform(d_eps_x_rng);
-
-        //seed_gbl = (a * seed_gbl + c) % m;
-        //ops_randomgen_init(seed_gbl, 0);
         ops_fill_random_uniform(d_eps_y_rng);
-
-        //seed_gbl = (a * seed_gbl + c) % m;
-        //ops_randomgen_init(seed_gbl, 0);
         ops_fill_random_uniform(d_eps_z_rng);
 
 
@@ -361,15 +300,7 @@ int main(int argc, char** argv){
         ops_dat_fetch_data(d_eps_x_gbl, 0, (char*)eps_x_gbl);
         ops_dat_fetch_data(d_eps_y_gbl, 0, (char*)eps_y_gbl);
         ops_dat_fetch_data(d_eps_z_gbl, 0, (char*)eps_z_gbl);
-/*
-        ops_update_const("x_gbl", eddies, "double", x_gbl);
-        ops_update_const("y_gbl", eddies, "double", y_gbl);
-        ops_update_const("z_gbl", eddies, "double", z_gbl);
-        ops_update_const("r_gbl", eddies, "double", r_gbl);
-        ops_update_const("eps_x_gbl", eddies, "int", eps_x_gbl);
-        ops_update_const("eps_y_gbl", eddies, "int", eps_y_gbl);
-        ops_update_const("eps_z_gbl", eddies, "int", eps_z_gbl);
-*/
+
         ops_par_loop(compute_fluct, "compute_fluct", inlet_block, 2, iter_range,
         ops_arg_dat(d_y_inlet, 1, S2D_00, "double", OPS_READ),
         ops_arg_dat(d_z_inlet, 1, S2D_00, "double", OPS_READ),
@@ -392,15 +323,9 @@ int main(int argc, char** argv){
         ops_arg_gbl(eps_y_gbl, eddies, "int", OPS_READ),
         ops_arg_gbl(eps_z_gbl, eddies, "int", OPS_READ));
 
-        /*
-        filename = std::string("u_test" + std::to_string(i) + ".dat");
+        
+        filename = std::string("up-") + std::to_string(i) + ".txt";
         ops_print_dat_to_txtfile(d_uprime, filename.c_str());
-        filename = std::string("v_test" + std::to_string(i) + ".dat");
-        ops_print_dat_to_txtfile(d_vprime, filename.c_str());
-        filename = std::string("w_test" + std::to_string(i) + ".dat");
-        ops_print_dat_to_txtfile(d_wprime, filename.c_str());
-        filename = std::string("T_test" + std::to_string(i) + ".dat");
-        ops_print_dat_to_txtfile(d_Tprime, filename.c_str());*/
     }
 
     ops_timers(&ct1, &et1);
